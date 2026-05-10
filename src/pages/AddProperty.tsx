@@ -80,7 +80,7 @@ export const AddProperty: React.FC = () => {
   };
 
   return (
-    <div className="pt-32 pb-24 min-h-screen bg-[#f8f9fa]">
+    <div className="pt-32 pb-24 min-h-screen bg-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-16 text-center">
           <span className="text-secondary text-xs font-black uppercase tracking-[0.3em] mb-4 block">Partner With Us</span>

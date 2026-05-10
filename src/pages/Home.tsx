@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Search, MapPin, Bed, Bath, ChevronRight, ArrowRight, Shield, Award, Users, Square, Heart } from 'lucide-react';
+import { Search, MapPin, Bed, Bath, ChevronRight, ArrowRight, Shield, Award, Users, Square, Heart, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ImageSlider } from '../components/ImageSlider';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 interface Property {
   id: number;
@@ -23,6 +24,7 @@ export const Home: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { toggleSaveProperty, savedPropertyIds } = useAuth();
+  const { addToCart, isInCart } = useCart();
 
   useEffect(() => {
     fetch('/api/properties')
@@ -146,6 +148,23 @@ export const Home: React.FC = () => {
                           >
                             <Heart className={`w-4 h-4 ${savedPropertyIds.includes(property.id) ? 'fill-current' : ''}`} />
                           </button>
+                          <button 
+                            onClick={() => addToCart({
+                              id: property.id,
+                              title: property.title,
+                              price: property.price,
+                              location: property.location,
+                              image_url: property.image_url,
+                              type: property.type
+                            })}
+                            className={`p-5 rounded-full backdrop-blur-md transition-all shadow-xl active:scale-95 ${
+                              isInCart(property.id) 
+                                ? 'bg-secondary text-primary' 
+                                : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
+                            }`}
+                          >
+                            <ShoppingBag className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     </motion.div>
@@ -227,6 +246,27 @@ export const Home: React.FC = () => {
                       }`}
                     >
                       <Heart className={`w-4 h-4 ${savedPropertyIds.includes(property.id) ? 'fill-current' : ''}`} />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addToCart({
+                          id: property.id,
+                          title: property.title,
+                          price: property.price,
+                          location: property.location,
+                          image_url: property.image_url,
+                          type: property.type
+                        });
+                      }}
+                      className={`p-3 rounded-full backdrop-blur-md transition-all shadow-xl active:scale-90 ${
+                        isInCart(property.id) 
+                          ? 'bg-secondary text-primary' 
+                          : 'bg-white/80 text-gray-400 hover:text-secondary'
+                      }`}
+                    >
+                      <ShoppingBag className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="absolute top-20 left-6">
@@ -340,7 +380,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* List Property CTA */}
-      <section className="py-24 bg-[#f8f9fa]">
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-[60px] p-12 md:p-20 shadow-xl border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-12">
             <div className="max-w-2xl text-center md:text-left">

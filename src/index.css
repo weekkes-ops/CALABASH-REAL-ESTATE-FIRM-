@@ -4,9 +4,10 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Cormorant Garamond", serif;
-  --color-primary: #1a3a8a; /* Deep Blue from Logo */
-  --color-secondary: #d4af37; /* Gold from Logo */
-  --color-accent: #facc15; /* Brighter Yellow for highlights */
+  --color-primary: #003366; /* Royal Blue */
+  --color-secondary: #c5a059; /* Elegant Gold */
+  --color-accent: #ffd700; /* Vibrant Gold for highlights */
+  --color-white: #ffffff;
 }
 
 @layer base {
@@ -14,6 +15,6 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-[#f8f9fa] text-[#1a1a1a];
+    @apply bg-white text-[#1a1a1a];
   }
 }

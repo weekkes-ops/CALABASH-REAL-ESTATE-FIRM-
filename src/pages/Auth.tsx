@@ -1,17 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Lock, User, ArrowRight, ShieldCheck, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const Auth: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get('mode') === 'signup' ? false : true;
+  const [isLogin, setIsLogin] = useState(initialMode);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
   const { login, signup } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    if (mode === 'signup') setIsLogin(false);
+    if (mode === 'login') setIsLogin(true);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +51,7 @@ export const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4 bg-[#f8f9fa]">
+    <div className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4 bg-white">
       <div className="max-w-6xl w-full flex flex-col lg:flex-row bg-white rounded-[60px] shadow-2xl overflow-hidden border border-gray-50">
         {/* Left Side - Visual */}
         <div className="lg:w-1/2 bg-primary p-16 md:p-24 text-white relative overflow-hidden hidden lg:flex flex-col justify-between">

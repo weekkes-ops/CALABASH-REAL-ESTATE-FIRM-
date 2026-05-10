@@ -4,11 +4,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   MapPin, Bed, Bath, Square, ArrowLeft, Phone, Mail, 
   Calendar, Share2, Heart, ShieldCheck, Globe, Info,
-  CheckCircle2, MessageSquare, User, Navigation, Trash2,
+  CheckCircle2, MessageSquare, User, Navigation, Trash2, ShoppingBag,
   X, ChevronLeft, ChevronRight, Maximize2
 } from 'lucide-react';
 import { ImageSlider } from '../components/ImageSlider';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 interface Property {
   id: number;
@@ -25,6 +26,13 @@ interface Property {
   status?: string;
   featured: boolean;
   user_id: number;
+  agent_id?: number;
+  agent_name?: string;
+  agent_email?: string;
+  agent_phone?: string;
+  agent_bio?: string;
+  agent_image?: string;
+  agent_specialization?: string;
 }
 
 export const PropertyDetail: React.FC = () => {
@@ -34,6 +42,7 @@ export const PropertyDetail: React.FC = () => {
   const [activeImage, setActiveImage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user, token, toggleSaveProperty, savedPropertyIds } = useAuth();
+  const { addToCart, isInCart } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -100,7 +109,7 @@ export const PropertyDetail: React.FC = () => {
   };
 
   return (
-    <div className="pt-32 pb-24 bg-[#f8f9fa]">
+    <div className="pt-32 pb-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Navigation & Actions */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
@@ -363,35 +372,58 @@ export const PropertyDetail: React.FC = () => {
                 
                 <div className="relative z-10">
                   <div className="flex items-center space-x-6 mb-10">
-                    <div className="w-20 h-20 rounded-3xl overflow-hidden border-4 border-secondary shadow-xl">
+                    <Link to={property.agent_id ? `/agents/${property.agent_id}` : '#'} className="w-20 h-20 rounded-3xl overflow-hidden border-4 border-secondary shadow-xl hover:scale-105 transition-transform">
                       <img 
-                        src="https://picsum.photos/seed/agent-sl/200/200" 
-                        alt="Agent" 
+                        src={property.agent_image || "https://picsum.photos/seed/agent-sl/200/200"} 
+                        alt={property.agent_name || "Agent"} 
                         className="w-full h-full object-cover"
                       />
-                    </div>
+                    </Link>
                     <div>
-                      <h3 className="text-2xl font-serif">Mohamed Bangura</h3>
-                      <p className="text-secondary text-[10px] font-black uppercase tracking-widest">Senior Property Advisor</p>
+                      <Link to={property.agent_id ? `/agents/${property.agent_id}` : '#'} className="hover:text-secondary transition-colors">
+                        <h3 className="text-2xl font-serif">{property.agent_name || "Mohamed Bangura"}</h3>
+                      </Link>
+                      <p className="text-secondary text-[10px] font-black uppercase tracking-widest">{property.agent_specialization || "Senior Property Advisor"}</p>
                     </div>
                   </div>
                   
                   <div className="space-y-6 mb-10">
-                    <div className="flex items-center space-x-4 group cursor-pointer">
+                    <a href={`tel:${property.agent_phone}`} className="flex items-center space-x-4 group cursor-pointer">
                       <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-secondary group-hover:text-primary transition-all">
                         <Phone className="w-5 h-5" />
                       </div>
-                      <span className="text-sm font-medium">+232 76 555 012</span>
-                    </div>
-                    <div className="flex items-center space-x-4 group cursor-pointer">
+                      <span className="text-sm font-medium">{property.agent_phone || "+232 76 555 012"}</span>
+                    </a>
+                    <a href={`mailto:${property.agent_email}`} className="flex items-center space-x-4 group cursor-pointer">
                       <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-secondary group-hover:text-primary transition-all">
                         <Mail className="w-5 h-5" />
                       </div>
-                      <span className="text-sm font-medium">m.bangura@calabashsl.com</span>
-                    </div>
+                      <span className="text-sm font-medium">{property.agent_email || "info@calabashsl.com"}</span>
+                    </a>
                   </div>
                   
                   <div className="space-y-4">
+                    <button 
+                      onClick={() => {
+                        if (property) {
+                          addToCart({
+                            id: property.id,
+                            title: property.title,
+                            price: property.price,
+                            location: property.location,
+                            image_url: property.image_url,
+                            type: property.type
+                          });
+                        }
+                      }}
+                      className={`w-full py-5 rounded-[24px] font-black uppercase tracking-widest text-[10px] transition-all shadow-xl active:scale-95 flex items-center justify-center ${
+                        isInCart(property.id) 
+                          ? 'bg-secondary text-primary cursor-default' 
+                          : 'bg-white text-primary border border-gray-100 hover:bg-secondary cursor-pointer'
+                      }`}
+                    >
+                      <ShoppingBag className="w-4 h-4 mr-3" /> {isInCart(property.id) ? 'In Your Basket' : 'Add to Basket'}
+                    </button>
                     <button 
                       onClick={handleInquiry}
                       className="w-full bg-secondary text-primary py-5 rounded-[24px] font-black uppercase tracking-widest text-[10px] hover:bg-accent transition-all shadow-xl active:scale-95 flex items-center justify-center"

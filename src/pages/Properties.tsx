@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, MapPin, Bed, Bath, X, Filter, ArrowRight, Plus, Heart } from 'lucide-react';
+import { Search, MapPin, Bed, Bath, X, Filter, ArrowRight, Plus, Heart, ShoppingBag } from 'lucide-react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { ImageSlider } from '../components/ImageSlider';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 interface Property {
   id: number;
@@ -33,6 +34,7 @@ export const Properties: React.FC = () => {
   const [minBathrooms, setMinBathrooms] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const { toggleSaveProperty, savedPropertyIds } = useAuth();
+  const { addToCart, isInCart } = useCart();
   const navigate = useNavigate();
   
   const initialSearch = searchParams.get('search') || '';
@@ -118,10 +120,10 @@ export const Properties: React.FC = () => {
               {showAdvanced ? 'Hide Filters' : 'Advanced Filters'}
             </button>
             
-            <div className="flex flex-col gap-6 w-full lg:w-auto overflow-x-auto pb-4 lg:pb-0 no-scrollbar">
+            <div className="flex flex-col gap-6 w-full lg:w-auto">
               <div className="space-y-4">
                 <span className="text-[10px] font-black uppercase tracking-widest text-secondary block ml-2">Property Type</span>
-                <div className="flex gap-4">
+                <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
                   {propertyTypes.map(type => (
                     <button
                       key={type}
@@ -129,6 +131,21 @@ export const Properties: React.FC = () => {
                       className={`px-8 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm ${filterType === type ? 'bg-primary text-white' : 'bg-white text-gray-400 hover:text-primary'}`}
                     >
                       {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <span className="text-[10px] font-black uppercase tracking-widest text-secondary block ml-2">Status</span>
+                <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                  {statusTypes.map(status => (
+                    <button
+                      key={status}
+                      onClick={() => setFilterStatus(status)}
+                      className={`px-8 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm ${filterStatus === status ? 'bg-secondary text-primary' : 'bg-white text-gray-400 hover:text-primary'}`}
+                    >
+                      {status}
                     </button>
                   ))}
                 </div>
@@ -144,19 +161,7 @@ export const Properties: React.FC = () => {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden mt-6"
               >
-                <div className="bg-white p-8 rounded-[30px] shadow-xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block ml-2">Property Type</label>
-                    <select 
-                      className="w-full bg-gray-50 border-none px-6 py-4 rounded-xl outline-none focus:ring-2 ring-secondary/50 transition-all text-primary appearance-none" 
-                      value={filterType}
-                      onChange={(e) => setFilterType(e.target.value)}
-                    >
-                      {propertyTypes.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="bg-white p-8 rounded-[30px] shadow-xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
                   <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block ml-2">Min Price</label>
                     <input 
@@ -216,21 +221,10 @@ export const Properties: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                
-                <div className="mt-6 flex flex-wrap gap-4">
-                  {statusTypes.map(status => (
-                    <button
-                      key={status}
-                      onClick={() => setFilterStatus(status)}
-                      className={`px-8 py-4 rounded-full text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm border border-gray-100 ${filterStatus === status ? 'bg-secondary text-primary border-secondary' : 'bg-white text-gray-400 hover:text-primary'}`}
-                    >
-                      {status}
-                    </button>
-                  ))}
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
+
         </div>
 
         {loading ? (
@@ -268,6 +262,27 @@ export const Properties: React.FC = () => {
                       }`}
                     >
                       <Heart className={`w-4 h-4 ${savedPropertyIds.includes(property.id) ? 'fill-current' : ''}`} />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addToCart({
+                          id: property.id,
+                          title: property.title,
+                          price: property.price,
+                          location: property.location,
+                          image_url: property.image_url,
+                          type: property.type
+                        });
+                      }}
+                      className={`p-3 rounded-full backdrop-blur-md transition-all shadow-xl active:scale-90 ${
+                        isInCart(property.id) 
+                          ? 'bg-secondary text-primary' 
+                          : 'bg-white/80 text-gray-400 hover:text-secondary'
+                      }`}
+                    >
+                      <ShoppingBag className="w-4 h-4" />
                     </button>
                     <div className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-primary shadow-lg">
                       {property.type}

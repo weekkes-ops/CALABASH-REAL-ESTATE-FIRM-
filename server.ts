@@ -39,7 +39,20 @@ db.exec(`
     status TEXT DEFAULT 'For Sale', -- 'For Sale', 'For Rent', 'Sold', 'Rented'
     featured BOOLEAN DEFAULT 0,
     user_id INTEGER,
-    FOREIGN KEY(user_id) REFERENCES users(id)
+    agent_id INTEGER,
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(agent_id) REFERENCES agents(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS agents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    bio TEXT,
+    profile_picture_url TEXT,
+    specialization TEXT,
+    experience_years INTEGER
   );
 
   CREATE TABLE IF NOT EXISTS saved_properties (
@@ -62,11 +75,51 @@ db.exec(`
 
 try {
   db.exec("ALTER TABLE properties ADD COLUMN status TEXT DEFAULT 'For Sale'");
-} catch (e) {
-  // Column already exists
-}
+} catch (e) {}
+
+try {
+  db.exec("ALTER TABLE properties ADD COLUMN agent_id INTEGER");
+} catch (e) {}
 
 // Seed data
+const agentCount = db.prepare("SELECT COUNT(*) as count FROM agents").get() as { count: number };
+if (agentCount.count === 0) {
+  const insertAgent = db.prepare(`
+    INSERT INTO agents (name, email, phone, bio, profile_picture_url, specialization, experience_years)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  insertAgent.run(
+    "Mohamed Bangura", 
+    "m.bangura@calabashsl.com", 
+    "+232 76 555 012", 
+    "Senior Property Advisor with over 15 years of experience in the Freetown luxury market. Specialist in high-end villas and investment portfolios.",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Mohamed",
+    "Luxury Residential",
+    15
+  );
+
+  insertAgent.run(
+    "Fatu Kamara", 
+    "f.kamara@calabashsl.com", 
+    "+232 78 444 999", 
+    "Expert in commercial property acquisitions and estate management throughout the Western Area. Dedicated to finding the perfect match for every client.",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Fatu",
+    "Commercial Real Estate",
+    10
+  );
+
+  insertAgent.run(
+    "Ibrahim Sesay", 
+    "i.sesay@calabashsl.com", 
+    "+232 30 111 222", 
+    "Passionate about beachfront developments and sustainable housing solutions. Leading our Tokeh and York expansion projects.",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Ibrahim",
+    "Beachfront Properties",
+    8
+  );
+}
+
 const userCount = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number };
 if (userCount.count === 0) {
   const hashedPassword = bcrypt.hashSync("admin123", 10);
@@ -83,12 +136,12 @@ if (propCount.count === 0) {
   `);
 
   const seedData = [
-    ["Luxury Mansion in Hill Station", "Exquisite mansion with breathtaking views of Freetown and the Atlantic Ocean.", 850000, "Hill Station, Freetown", 6, 5, 5500, "Mansion", "https://picsum.photos/seed/sl1/800/600", JSON.stringify(["https://picsum.photos/seed/sl1/800/600", "https://picsum.photos/seed/sl1b/800/600", "https://picsum.photos/seed/sl1c/800/600"]), "For Sale", 1, 1],
-    ["Modern Apartment in Aberdeen", "Stylish 3-bedroom apartment just minutes from Lumley Beach.", 250000, "Aberdeen, Freetown", 3, 2, 1800, "Apartment", "https://picsum.photos/seed/sl2/800/600", JSON.stringify(["https://picsum.photos/seed/sl2/800/600", "https://picsum.photos/seed/sl2b/800/600"]), "Rented", 0, 1],
-    ["Commercial Space in Central", "Prime office space in the heart of Freetown's business district.", 1500000, "Siaka Stevens St, Freetown", 0, 4, 3500, "Commercial", "https://picsum.photos/seed/sl3/800/600", JSON.stringify(["https://picsum.photos/seed/sl3/800/600"]), "Sold", 1, 1],
-    ["Beachfront Villa in Tokeh", "Serene villa on the white sands of Tokeh Beach.", 1200000, "Tokeh, Western Area", 4, 4, 3200, "Villa", "https://picsum.photos/seed/sl4/800/600", JSON.stringify(["https://picsum.photos/seed/sl4/800/600", "https://picsum.photos/seed/sl4b/800/600"]), "For Sale", 1, 1],
-    ["Family Home in Goderich", "Spacious family home with a large garden and modern amenities.", 450000, "Goderich, Freetown", 4, 3, 2400, "House", "https://picsum.photos/seed/sl5/800/600", JSON.stringify(["https://picsum.photos/seed/sl5/800/600"]), "For Sale", 0, 1],
-    ["Commercial & Residential Complex - Tombo Junction", "Prime property located at Main Highway Tombo Junction, Waterloo. Features 4 residential apartments and 5 commercial shops. Excellent investment opportunity. Price is negotiable.", 490000, "Tombo Junction, Waterloo", 8, 4, 4200, "Commercial", "https://picsum.photos/seed/tombo1/800/600", JSON.stringify(["https://picsum.photos/seed/tombo1/800/600", "https://picsum.photos/seed/tombo2/800/600", "https://picsum.photos/seed/tombo3/800/600"]), "For Sale", 1, 1]
+    ["Luxury Mansion in Hill Station", "Exquisite mansion with breathtaking views of Freetown and the Atlantic Ocean.", 850000, "Hill Station, Freetown", 6, 5, 5500, "Mansion", "https://picsum.photos/seed/sl1/800/600", JSON.stringify(["https://picsum.photos/seed/sl1/800/600", "https://picsum.photos/seed/sl1b/800/600", "https://picsum.photos/seed/sl1c/800/600"]), "For Sale", 1, 1, 1],
+    ["Modern Apartment in Aberdeen", "Stylish 3-bedroom apartment just minutes from Lumley Beach.", 250000, "Aberdeen, Freetown", 3, 2, 1800, "Apartment", "https://picsum.photos/seed/sl2/800/600", JSON.stringify(["https://picsum.photos/seed/sl2/800/600", "https://picsum.photos/seed/sl2b/800/600"]), "Rented", 0, 1, 2],
+    ["Commercial Space in Central", "Prime office space in the heart of Freetown's business district.", 1500000, "Siaka Stevens St, Freetown", 0, 4, 3500, "Commercial", "https://picsum.photos/seed/sl3/800/600", JSON.stringify(["https://picsum.photos/seed/sl3/800/600"]), "Sold", 1, 1, 2],
+    ["Beachfront Villa in Tokeh", "Serene villa on the white sands of Tokeh Beach.", 1200000, "Tokeh, Western Area", 4, 4, 3200, "Villa", "https://picsum.photos/seed/sl4/800/600", JSON.stringify(["https://picsum.photos/seed/sl4/800/600", "https://picsum.photos/seed/sl4b/800/600"]), "For Sale", 1, 1, 3],
+    ["Family Home in Goderich", "Spacious family home with a large garden and modern amenities.", 450000, "Goderich, Freetown", 4, 3, 2400, "House", "https://picsum.photos/seed/sl5/800/600", JSON.stringify(["https://picsum.photos/seed/sl5/800/600"]), "For Sale", 0, 1, 1],
+    ["Commercial & Residential Complex - Tombo Junction", "Prime property located at Main Highway Tombo Junction, Waterloo. Features 4 residential apartments and 5 commercial shops. Excellent investment opportunity. Price is negotiable.", 490000, "Tombo Junction, Waterloo", 8, 4, 4200, "Commercial", "https://picsum.photos/seed/tombo1/800/600", JSON.stringify(["https://picsum.photos/seed/tombo1/800/600", "https://picsum.photos/seed/tombo2/800/600", "https://picsum.photos/seed/tombo3/800/600"]), "For Sale", 1, 1, 2]
   ];
 
   for (const data of seedData) {
@@ -174,19 +227,53 @@ async function startServer() {
     const { status } = req.query;
     let properties;
     if (status && status !== 'All') {
-      properties = db.prepare("SELECT * FROM properties WHERE status = ?").all(status);
+      properties = db.prepare(`
+        SELECT p.*, a.name as agent_name, a.profile_picture_url as agent_image 
+        FROM properties p 
+        LEFT JOIN agents a ON p.agent_id = a.id 
+        WHERE p.status = ?
+      `).all(status);
     } else {
-      properties = db.prepare("SELECT * FROM properties").all();
+      properties = db.prepare(`
+        SELECT p.*, a.name as agent_name, a.profile_picture_url as agent_image 
+        FROM properties p 
+        LEFT JOIN agents a ON p.agent_id = a.id
+      `).all();
     }
     res.json(properties.map((p: any) => ({ ...p, images: JSON.parse(p.images || '[]') })));
   });
 
   app.get("/api/properties/:id", (req, res) => {
-    const property = db.prepare("SELECT * FROM properties WHERE id = ?").get(req.params.id) as any;
+    const property = db.prepare(`
+      SELECT p.*, a.name as agent_name, a.email as agent_email, a.phone as agent_phone, 
+             a.bio as agent_bio, a.profile_picture_url as agent_image, a.specialization as agent_specialization
+      FROM properties p 
+      LEFT JOIN agents a ON p.agent_id = a.id 
+      WHERE p.id = ?
+    `).get(req.params.id) as any;
+    
     if (property) {
       res.json({ ...property, images: JSON.parse(property.images || '[]') });
     } else {
       res.status(404).json({ error: "Property not found" });
+    }
+  });
+
+  app.get("/api/agents", (req, res) => {
+    const agents = db.prepare("SELECT * FROM agents").all();
+    res.json(agents);
+  });
+
+  app.get("/api/agents/:id", (req, res) => {
+    const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(req.params.id) as any;
+    if (agent) {
+      const properties = db.prepare("SELECT * FROM properties WHERE agent_id = ?").all(req.params.id);
+      res.json({ 
+        ...agent, 
+        properties: properties.map((p: any) => ({ ...p, images: JSON.parse(p.images || '[]') })) 
+      });
+    } else {
+      res.status(404).json({ error: "Agent not found" });
     }
   });
 
