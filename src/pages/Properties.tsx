@@ -238,6 +238,10 @@ export const Properties: React.FC = () => {
                 key={property.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  transition: { duration: 0.3 }
+                }}
                 transition={{ delay: idx * 0.05 }}
                 className="group bg-white rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 cursor-pointer"
                 onClick={() => navigate(`/properties/${property.id}`)}
@@ -249,7 +253,7 @@ export const Properties: React.FC = () => {
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
+                  <div className="absolute top-6 right-6 flex flex-col gap-2 items-end opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0">
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -284,11 +288,13 @@ export const Properties: React.FC = () => {
                     >
                       <ShoppingBag className="w-4 h-4" />
                     </button>
-                    <div className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-primary shadow-lg">
+                  </div>
+                  <div className="absolute bottom-6 left-6 flex flex-col gap-2">
+                    <div className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-primary shadow-lg inline-block w-fit">
                       {property.type}
                     </div>
                     {property.status && (
-                      <div className={`${getStatusColor(property.status)} px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg`}>
+                      <div className={`${getStatusColor(property.status)} px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg inline-block w-fit`}>
                         {property.status}
                       </div>
                     )}
@@ -298,7 +304,7 @@ export const Properties: React.FC = () => {
                 <div className="p-10">
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <h3 className="text-2xl font-serif text-primary mb-2 group-hover:text-secondary transition-colors">{property.title}</h3>
+                      <h3 className="text-2xl font-serif text-primary mb-2 group-hover:text-secondary transition-colors line-clamp-1">{property.title}</h3>
                       <div className="flex items-center text-gray-400 text-xs font-medium">
                         <MapPin className="w-4 h-4 mr-2 text-secondary" />
                         {property.location}
@@ -315,7 +321,7 @@ export const Properties: React.FC = () => {
                       <span className="flex items-center"><Bath className="w-4 h-4 mr-2 text-secondary" /> {property.bathrooms}</span>
                     </div>
                     <button 
-                      className="bg-primary/5 text-primary px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all active:scale-95"
+                      className="bg-primary/5 text-primary px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all active:scale-95 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
                     >
                       View Details
                     </button>
