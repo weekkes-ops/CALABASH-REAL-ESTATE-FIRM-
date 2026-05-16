@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -24,8 +24,17 @@ export const AddProperty: React.FC = () => {
     status: 'For Sale',
     featured: false,
     image_url: '',
-    images: [] as string[]
+    images: [] as string[],
+    agent_id: ''
   });
+
+  const [agents, setAgents] = useState<{id: number, name: string}[]>([]);
+
+  useEffect(() => {
+    fetch('/api/agents')
+      .then(res => res.json())
+      .then(setAgents);
+  }, []);
 
   const [newImageUrl, setNewImageUrl] = useState('');
 
@@ -65,7 +74,8 @@ export const AddProperty: React.FC = () => {
           sqft: parseInt(formData.sqft),
           parking_spaces: parseInt(formData.parking_spaces),
           year_built: formData.year_built ? parseInt(formData.year_built) : null,
-          featured: formData.featured
+          featured: formData.featured,
+          agent_id: formData.agent_id ? parseInt(formData.agent_id) : null
         })
       });
 
@@ -309,6 +319,20 @@ export const AddProperty: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Assigned Agent</label>
+                  <select 
+                    className="w-full bg-gray-50 border-none px-6 py-4 rounded-xl outline-none focus:ring-2 ring-secondary/50 transition-all text-primary appearance-none"
+                    value={formData.agent_id}
+                    onChange={(e) => setFormData({ ...formData, agent_id: e.target.value })}
+                  >
+                    <option value="">Select an Agent</option>
+                    {agents.map(agent => (
+                      <option key={agent.id} value={agent.id}>{agent.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="space-y-4 pt-6 border-t border-gray-100">

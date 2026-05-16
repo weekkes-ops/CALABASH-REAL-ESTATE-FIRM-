@@ -22,6 +22,17 @@ db.exec(`
     role TEXT DEFAULT 'user' -- 'user' or 'admin'
   );
 
+  CREATE TABLE IF NOT EXISTS agents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    bio TEXT,
+    profile_picture_url TEXT,
+    specialization TEXT,
+    experience_years INTEGER
+  );
+
   CREATE TABLE IF NOT EXISTS properties (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
@@ -44,17 +55,6 @@ db.exec(`
     FOREIGN KEY(agent_id) REFERENCES agents(id)
   );
 
-  CREATE TABLE IF NOT EXISTS agents (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    phone TEXT,
-    bio TEXT,
-    profile_picture_url TEXT,
-    specialization TEXT,
-    experience_years INTEGER
-  );
-
   CREATE TABLE IF NOT EXISTS saved_properties (
     user_id INTEGER,
     property_id INTEGER,
@@ -72,14 +72,6 @@ db.exec(`
     image_url TEXT
   );
 `);
-
-try {
-  db.exec("ALTER TABLE properties ADD COLUMN status TEXT DEFAULT 'For Sale'");
-} catch (e) {}
-
-try {
-  db.exec("ALTER TABLE properties ADD COLUMN agent_id INTEGER");
-} catch (e) {}
 
 // Seed data
 const agentCount = db.prepare("SELECT COUNT(*) as count FROM agents").get() as { count: number };
@@ -131,8 +123,8 @@ if (userCount.count === 0) {
 const propCount = db.prepare("SELECT COUNT(*) as count FROM properties").get() as { count: number };
 if (propCount.count === 0) {
   const insert = db.prepare(`
-    INSERT INTO properties (title, description, price, location, bedrooms, bathrooms, sqft, type, image_url, images, status, featured, user_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO properties (title, description, price, location, bedrooms, bathrooms, sqft, type, image_url, images, status, featured, user_id, agent_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const seedData = [
@@ -149,12 +141,12 @@ if (propCount.count === 0) {
   }
 }
 
-// Ensure the new Tombo Junction property is added if not present
+// Ensure the new Tombo Junction property is added if not present (with status and agent_id)
 const tomboExists = db.prepare("SELECT COUNT(*) as count FROM properties WHERE title LIKE '%Tombo Junction%'").get() as { count: number };
 if (tomboExists.count === 0) {
   db.prepare(`
-    INSERT INTO properties (title, description, price, location, bedrooms, bathrooms, sqft, type, image_url, images, featured, user_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO properties (title, description, price, location, bedrooms, bathrooms, sqft, type, image_url, images, status, featured, user_id, agent_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     "Commercial & Residential Complex - Tombo Junction", 
     "Prime property located at Main Highway Tombo Junction, Waterloo. Features 4 residential apartments and 5 commercial shops. Excellent investment opportunity. Price is negotiable.", 
@@ -163,7 +155,8 @@ if (tomboExists.count === 0) {
     8, 4, 4200, "Commercial", 
     "https://picsum.photos/seed/tombo1/800/600", 
     JSON.stringify(["https://picsum.photos/seed/tombo1/800/600", "https://picsum.photos/seed/tombo2/800/600", "https://picsum.photos/seed/tombo3/800/600"]), 
-    1, 1
+    "For Sale",
+    1, 1, 2
   );
 }
 
@@ -290,15 +283,15 @@ async function startServer() {
   });
 
   app.post("/api/properties", authenticateToken, (req: any, res) => {
-    const { title, description, price, location, bedrooms, bathrooms, sqft, parking_spaces, year_built, type, image_url, images, status, featured } = req.body;
+    const { title, description, price, location, bedrooms, bathrooms, sqft, parking_spaces, year_built, type, image_url, images, status, featured, agent_id } = req.body;
     
     if (!title || !price || !location) {
       return res.status(400).json({ error: "Title, price, and location are required" });
     }
 
     const info = db.prepare(`
-      INSERT INTO properties (title, description, price, location, bedrooms, bathrooms, sqft, parking_spaces, year_built, type, image_url, images, status, featured, user_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO properties (title, description, price, location, bedrooms, bathrooms, sqft, parking_spaces, year_built, type, image_url, images, status, featured, user_id, agent_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       title, 
       description, 
@@ -314,7 +307,8 @@ async function startServer() {
       JSON.stringify(images || []), 
       status || 'For Sale',
       featured ? 1 : 0, 
-      req.user.id
+      req.user.id,
+      agent_id ? Number(agent_id) : null
     );
     res.json({ id: info.lastInsertRowid });
   });

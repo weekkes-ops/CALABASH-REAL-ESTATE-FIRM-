@@ -5,7 +5,7 @@ import {
   MapPin, Bed, Bath, Square, ArrowLeft, Phone, Mail, 
   Calendar, Share2, Heart, ShieldCheck, Globe, Info,
   CheckCircle2, MessageSquare, User, Navigation, Trash2, ShoppingBag,
-  X, ChevronLeft, ChevronRight, Maximize2
+  X, ChevronLeft, ChevronRight, Maximize2, ZoomIn, ZoomOut, RotateCcw
 } from 'lucide-react';
 import { ImageSlider } from '../components/ImageSlider';
 import { useAuth } from '../context/AuthContext';
@@ -41,6 +41,7 @@ export const PropertyDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [zoom, setZoom] = useState(1);
   const { user, token, toggleSaveProperty, savedPropertyIds } = useAuth();
   const { addToCart, isInCart } = useCart();
   const navigate = useNavigate();
@@ -101,11 +102,28 @@ export const PropertyDetail: React.FC = () => {
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     setActiveImage((prev) => (prev + 1) % allImages.length);
+    setZoom(1);
   };
 
   const prevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     setActiveImage((prev) => (prev - 1 + allImages.length) % allImages.length);
+    setZoom(1);
+  };
+
+  const handleZoomIn = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setZoom(prev => Math.min(prev + 0.5, 4));
+  };
+
+  const handleZoomOut = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setZoom(prev => Math.max(prev - 0.5, 1));
+  };
+
+  const resetZoom = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setZoom(1);
   };
 
   return (
@@ -155,7 +173,9 @@ export const PropertyDetail: React.FC = () => {
               layoutId="property-main-image"
               src={allImages[activeImage]} 
               alt={property.title} 
-              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
             
@@ -192,9 +212,16 @@ export const PropertyDetail: React.FC = () => {
               <button 
                 key={idx}
                 onClick={() => setActiveImage(idx)}
-                className={`relative aspect-square rounded-[32px] overflow-hidden shadow-lg transition-all duration-500 ${activeImage === idx ? 'ring-4 ring-secondary ring-offset-4' : 'opacity-60 hover:opacity-100'}`}
+                className={`relative aspect-square rounded-[32px] overflow-hidden shadow-lg transition-all duration-500 group ${activeImage === idx ? 'ring-4 ring-secondary ring-offset-4' : 'opacity-60 hover:opacity-100'}`}
               >
-                <img src={img} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <motion.img 
+                  src={img} 
+                  alt="" 
+                  whileHover={{ scale: 1.15 }}
+                  transition={{ duration: 0.4 }}
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer" 
+                />
               </button>
             ))}
           </div>
@@ -208,33 +235,74 @@ export const PropertyDetail: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-primary/95 backdrop-blur-2xl"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                setIsModalOpen(false);
+                resetZoom();
+              }}
             >
-              <button 
-                className="absolute top-12 right-12 z-[110] p-4 bg-white/10 hover:bg-white/20 rounded-full transition-all group"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsModalOpen(false);
-                }}
-              >
-                <X className="w-8 h-8 text-white group-hover:rotate-90 transition-transform duration-300" />
-              </button>
+              <div className="absolute top-12 right-12 z-[110] flex items-center space-x-4">
+                <div className="flex items-center bg-white/10 backdrop-blur-md rounded-full px-4 py-2 border border-white/20">
+                  <button 
+                    onClick={handleZoomOut}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors text-white disabled:opacity-30"
+                    disabled={zoom <= 1}
+                  >
+                    <ZoomOut className="w-5 h-5" />
+                  </button>
+                  <span className="text-white text-xs font-black min-w-[3rem] text-center">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <button 
+                    onClick={handleZoomIn}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors text-white disabled:opacity-30"
+                    disabled={zoom >= 4}
+                  >
+                    <ZoomIn className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={resetZoom}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors text-white ml-2 border-l border-white/20"
+                    title="Reset Zoom"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <button 
+                  className="p-4 bg-white/10 hover:bg-white/20 rounded-full transition-all group"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsModalOpen(false);
+                    resetZoom();
+                  }}
+                >
+                  <X className="w-8 h-8 text-white group-hover:rotate-90 transition-transform duration-300" />
+                </button>
+              </div>
 
               <div 
-                className="relative w-full max-w-6xl aspect-[4/3] md:aspect-video rounded-[40px] md:rounded-[60px] overflow-hidden shadow-2xl"
+                className="relative w-full max-w-6xl aspect-[4/3] md:aspect-video rounded-[40px] md:rounded-[60px] overflow-hidden shadow-2xl bg-black/20"
                 onClick={(e) => e.stopPropagation()}
               >
-                <motion.img 
-                  layoutId="property-main-image"
-                  key={activeImage}
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                  src={allImages[activeImage]} 
-                  alt={property.title}
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
+                <div className="w-full h-full cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center">
+                  <motion.img 
+                    layoutId="property-main-image"
+                    key={activeImage}
+                    drag={zoom > 1}
+                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                    dragElastic={0.6}
+                    initial={{ opacity: 0, scale: 1.1 }}
+                    animate={{ 
+                      opacity: 1, 
+                      scale: zoom,
+                      transition: { duration: 0.3 }
+                    }}
+                    src={allImages[activeImage]} 
+                    alt={property.title}
+                    className="max-w-full max-h-full object-contain pointer-events-none"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
 
                 {allImages.length > 1 && (
                   <>
